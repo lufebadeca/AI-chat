@@ -20,7 +20,7 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
         <div className="flex flex-col flex-1 p-4 bg-white rounded-lg shadow-md">
 
             <h1 className="text-xl font-bold text-gray-800 border-b pb-2">
-                {activeUser ? `Chat con ${activeUser.name.first} | ${activeUser.phone}` : "Elige un contacto" }
+                {activeUser ? `Chat con ${activeUser.name} | ${activeUser.phone}` : "Elige un contacto" }
             </h1>
             
             <div className="flex flex-1 flex-col py-4 text-gray-700 space-y-2 overflow-y-auto">
