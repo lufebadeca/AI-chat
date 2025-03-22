@@ -1,15 +1,24 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ContactCard } from "./contactCard";
 import { BsPersonFillAdd } from "react-icons/bs";
+import { NewUserForm } from "./newUserForm";
+import { doc, onSnapshot } from "firebase/firestore";
 
 export const ContactList = ({usersList, activeUser, setActiveUser} )=>{
 
+    const [newUserModal, setNewUserModal] = useState(false);
 
     return(
-        <div className="w-1/3 bg-gray-200 p-4 overflow-hidden">
-            <div className="flex justify-between py-4">
-                <h2 className="text-2xl font-semibold mb-4 text-blue-400">Contactos</h2>
-                <button className="bg-gray-300 p-1 rounded-md text-black hover:bg-gray-100 cursor-pointer active:-translate-y-1">
+        <section className="w-1/3 bg-gray-200 p-4 overflow-hidden">
+
+            {  newUserModal && <NewUserForm setModal={setNewUserModal}/> }
+
+            <div className="flex justify-between items-center py-4">
+                <h2 className="text-2xl font-semibold text-blue-400 flex items-center">Contactos</h2>
+                <button
+                    onClick={ ()=>setNewUserModal( !newUserModal ) } 
+                    className="bg-blue-300 p-1 w-20 h-10 flex justify-center items-center rounded-md text-black hover:bg-blue-400 cursor-pointer active:-translate-y-0.5"
+                >
                     <BsPersonFillAdd />
                 </button>
             </div>
@@ -19,6 +28,6 @@ export const ContactList = ({usersList, activeUser, setActiveUser} )=>{
                     <ContactCard key={index} contact={contact} activeUser={activeUser} setActiveUser={setActiveUser}/>
                 ) }
             </div>
-        </div>
+        </section>
     )
 }

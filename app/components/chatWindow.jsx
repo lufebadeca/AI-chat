@@ -41,7 +41,7 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
                     className="flex-1 p-2 border text-blue-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder={`Escribe acá`}
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={ (e) => setInputValue(e.target.value) }
                     />
                 <button 
                     className="px-4 py-2 text-white bg-blue-600 rounded-lg shadow-md transition duration-300 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"

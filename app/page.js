@@ -15,6 +15,7 @@ export default function Home() {
 
   const [activeUser, setActiveUser] = useState("");
   const [usersList, setUsersList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   //use effect 
   useEffect( ()=>{
