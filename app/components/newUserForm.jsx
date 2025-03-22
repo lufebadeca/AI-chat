@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { db } from "@/firebaseConfig";  //connect with configFirebase file
 import { collection, addDoc } from "firebase/firestore"; 
 
-export const NewUserForm = ({setModal})=>{
+export const NewUserForm = ( {setModal, handleAddUser} )=>{
 
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -14,6 +14,23 @@ export const NewUserForm = ({setModal})=>{
       setModal(false);
     }
   }
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newUser = {
+      name: name,
+      lastName: lastName,
+      phone: phone,
+      image: imageSrc
+    };  // Create a new user object
+
+    handleAddUser(newUser);  // Call the onAddUser prop with the new user object
+    setName('');
+    setLastName('');
+    setPhone('');
+    setImageSrc('');
+    setModal(false);
+  };
 
   const handleClick = async ()=>{
     const saveUser = await addDoc( collection(db, "users"),{
@@ -67,7 +84,7 @@ export const NewUserForm = ({setModal})=>{
             </div>
 
             <button
-                onClick={ handleClick }
+                onClick={ handleSubmit }
                 className="bg-blue-300 p-1 rounded-md text-black hover:bg-blue-400 cursor-pointer active:-translate-y-0.5"
             >
                 Agregar
