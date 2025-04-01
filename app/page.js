@@ -37,7 +37,7 @@ export default function Home() {
     return () => unsubscribe();
   }, []); // Empty dependency array means this effect runs only once, on mount
 
-
+  /*
   const handleAddUser = async (newUserObj) => {
     try {
       await addDoc(collection(db, "users"), newUserObj);
@@ -47,7 +47,7 @@ export default function Home() {
       console.error("Error adding user:", error);
       // Handle the error in the UI (e.g., display an error message)
     }
-  };
+  };*/
 
   if (loading) {
     return <p>Loading users...</p>;
@@ -77,7 +77,6 @@ export default function Home() {
         setUsersList={setUsersList}
         activeUser={activeUser}
         setActiveUser={setActiveUser}
-        handleAddUser={handleAddUser}
       />
     </section>
   );

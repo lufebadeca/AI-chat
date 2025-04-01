@@ -4,14 +4,14 @@ import { BsPersonFillAdd } from "react-icons/bs";
 import { NewUserForm } from "./newUserForm";
 import { doc, onSnapshot } from "firebase/firestore";
 
-export const ContactList = ({usersList, setUsersList, activeUser, setActiveUser, handleAddUser} )=>{
+export const ContactList = ({usersList, setUsersList, activeUser, setActiveUser} )=>{
 
     const [newUserModal, setNewUserModal] = useState(false);
 
     return(
         <section className="w-1/3 bg-gray-200 p-4 overflow-hidden">
 
-            {  newUserModal && <NewUserForm setModal={setNewUserModal} handleAddUser={handleAddUser}/> }
+            {  newUserModal && <NewUserForm setModal={setNewUserModal} /> }
 
             <div className="flex justify-between items-center py-4">
                 <h2 className="text-2xl font-semibold text-blue-400 flex items-center">Contactos</h2>

@@ -7,7 +7,9 @@ export const ContactCard = ({contact, activeUser, setActiveUser})=>{
     return(
 
         <article
-            className={`max-w-sm p-2 flex justify-between border rounded-lg shadow-md cursor-pointer transition duration-300 hover:bg-gray-100 ${activeUser?.name===contact.name ? "bg-blue-300" : "bg-white"}`} 
+            className={`max-w-sm p-2 flex justify-between border rounded-lg shadow-md cursor-pointer 
+                transition duration-300 hover:bg-blue-200 
+                ${activeUser?.id===contact.id ? "bg-blue-100" : "bg-white"}`} 
             onClick={ ()=>setActiveUser(contact) }
         >
             <div>

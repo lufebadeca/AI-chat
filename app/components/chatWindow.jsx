@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import Link from "next/link";
 
 
 export const ChatWindow = ( {activeUser, contactList} ) =>{
@@ -17,11 +18,27 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
     };
 
     return(
-        <div className="flex flex-col flex-1 p-4 bg-white rounded-lg shadow-md">
+        <section className="flex flex-col flex-1 p-4 bg-white rounded-lg shadow-md">
 
-            <h1 className="text-xl font-bold text-gray-800 border-b pb-2">
-                {activeUser ? `Chat con ${activeUser.name} | ${activeUser.phone}` : "Elige un contacto" }
-            </h1>
+            <div className="bg-blue-200 flex justify-between items-center border-b">
+                <h1 className="text-xl font-bold text-gray-800 p-3">
+                    {activeUser ? `Chat con ${activeUser.name} | ${activeUser.phone}` : "Elige un contacto" }
+                </h1>
+
+                {/* <Link
+                className="bg-slate-200 m-2 p-2 text-sm rounded-md text-black cursor-pointer active:translate-y-0.5 hover:bg-slate-400"
+                href={`/perfil?userId=${activeUser.id}`}
+                >
+                    Ver perfil
+                </Link> */}
+
+                <Link
+                className="bg-slate-200 m-2 p-2 text-sm rounded-md text-black cursor-pointer active:translate-y-0.5 hover:bg-slate-400"
+                href={`/perfil/${activeUser.id}`}
+                >
+                    Ver perfil
+                </Link>
+            </div>
             
             <div className="flex flex-1 flex-col py-4 text-gray-700 space-y-2 overflow-y-auto">
                 { messages.length>=1 && messages?.map( (msg, index) => (
@@ -58,6 +75,6 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
                 </button>
             </div>
             
-        </div>
+        </section>
     )
 }

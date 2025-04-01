@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { db } from "@/firebaseConfig";  //connect with configFirebase file
-import { collection, addDoc } from "firebase/firestore"; 
+import { collection, doc, getDoc, setDoc } from "firebase/firestore"; 
 
-export const NewUserForm = ( {setModal, handleAddUser} )=>{
+export const NewUserForm = ( 
+  {setModal, mode="", initName="", initLastName="", initPhone="", initImgSrc="", pickedUserId=""} 
+  )=>{
 
-  const [name, setName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [imageSrc, setImageSrc] = useState("");
+  const [name, setName] = useState(initName);
+  const [lastName, setLastName] = useState(initLastName);
+  const [phone, setPhone] = useState(initPhone);
+  const [imageSrc, setImageSrc] = useState(initImgSrc);
 
   const handleModal = (e)=>{
     if ( e.target.id==="modal" ){
@@ -17,14 +19,9 @@ export const NewUserForm = ( {setModal, handleAddUser} )=>{
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newUser = {
-      name: name,
-      lastName: lastName,
-      phone: phone,
-      image: imageSrc
-    };  // Create a new user object
 
-    handleAddUser(newUser);  // Call the onAddUser prop with the new user object
+    // Call the onAddUser prop with the new user object
+    mode==="edit" ? handleEditUser(): handleAddUser();  
     setName('');
     setLastName('');
     setPhone('');
@@ -32,14 +29,30 @@ export const NewUserForm = ( {setModal, handleAddUser} )=>{
     setModal(false);
   };
 
-  const handleClick = async ()=>{
-    const saveUser = await addDoc( collection(db, "users"),{
+  const handleAddUser = async ()=>{
+    const newUser = await doc( collection(db, "users"));
+    await setDoc(newUser, {
+      id: newUser.id,
       name: name,
       lastName: lastName,
       phone: phone,
-      image: imageSrc
+      image: imageSrc || "https://images.icon-icons.com/1378/PNG/512/avatardefault_92824.png"
     } );
+    setModal(false);
+  }
 
+  const handleEditUser = async ()=>{
+    const docRef = doc(db, "users", pickedUserId);
+    const userSnap = await getDoc(docRef);
+    const userData = userSnap.data();
+
+    await setDoc(docRef, {
+      //id: newUser.id,
+      name: name || userData.name,
+      lastName: lastName || userData.lastName,
+      phone: phone || userData.phone,
+      image: imageSrc || userData.imageSrc
+    } );
     setModal(false);
   }
 
@@ -50,7 +63,9 @@ export const NewUserForm = ( {setModal, handleAddUser} )=>{
         onClick={ handleModal }
     >
         <article className="bg-gray-100 text-black p-6 h-100 w-100 flex flex-col justify-between">
-            <h1 className="text-xl bold text-center">Agregar nuevo contacto</h1>
+            
+            <h1 className="text-xl bold text-center">{mode==="edit" ? "Editar usuario":"Agregar nuevo usuario"}</h1>
+            
             <div className="flex justify-between">
                 <label htmlFor="nombre">Nombre:</label>
                 <input type="text" id="nombre" className="border-gray-400 border-1 mx-3"
@@ -87,7 +102,7 @@ export const NewUserForm = ( {setModal, handleAddUser} )=>{
                 onClick={ handleSubmit }
                 className="bg-blue-300 p-1 rounded-md text-black hover:bg-blue-400 cursor-pointer active:-translate-y-0.5"
             >
-                Agregar
+                Guardar
             </button>
 
             <button

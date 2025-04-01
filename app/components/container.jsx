@@ -6,8 +6,11 @@ export const Container = ({usersList, activeUser, setActiveUser, handleAddUser})
 
     return(
         <div className="flex flex-row h-[90vh] w-full max-w-5xl mx-auto bg-gray-100 rounded-lg shadow-lg overflow-hidden">
-            <ContactList usersList={usersList} setActiveUser={setActiveUser} handleAddUser={handleAddUser}></ContactList>
-            <ChatWindow activeUser={activeUser} usersList={usersList}></ChatWindow>
+            <ContactList usersList={usersList} activeUser={activeUser} setActiveUser={setActiveUser} ></ContactList>
+            {activeUser ? 
+                (<ChatWindow activeUser={activeUser} usersList={usersList}></ChatWindow>) : 
+                (<p className="text-black flex items-center justify-center ml-auto mr-auto">No hay usuario seleccionado</p>)
+            }
         </div>
     )
 }
