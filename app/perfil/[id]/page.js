@@ -1,7 +1,8 @@
 "use client"
 import { Header } from "../../components/header"
 import { collection, doc, setDoc, getDoc } from "firebase/firestore"; 
-import { db } from "@/firebaseConfig";  //connect with configFirebase file
+import { ref, getStorage, getDownloadURL, uploadBytesResumable } from "firebase/storage"; 
+import { db, storage } from "@/firebaseConfig";  //connect with configFirebase file
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -14,19 +15,43 @@ const Profile = ()=>{
 
   const params = useParams();
   const [user, setUser] = useState();
+
+  const [image, setImage] = useState(); //hardcoded image
+  const [uploadImageModal, setUploadImageModal] = useState();
+
   console.log(params);
 
-  useEffect( ()=>{
-
-    const  findUserData = async()=>{
+  useEffect( ()=>{  //get user data, hooked to first render []
+    const  getUserData = async()=>{
       const docRef = doc(db, "users", params.id);
       const userSnap = await getDoc(docRef);
       const userData = userSnap.data();
+
+      //console.log(JSON.stringify(userData));
+      console.log((userData));
+      setImage(userData.image);
       setUser(userData);
     }
-    findUserData();
+    getUserData();
   }, []
   );
+
+  useEffect( ()=>{  //get images, hooked to user (profile/active user data)
+    const getImages = async ()=>{
+      console.log(image);
+      // Get a reference to the storage service, which is used to create references in your storage bucket
+      if (!image) {
+        console.error("No image provided for storage reference.");
+        return;
+      }
+      // Create a storage reference from our storage service
+      const storageRef = ref(storage, image);
+      const imageURL = await getDownloadURL(storageRef);
+      console.log("full URL", imageURL);
+      setImage(imageURL); //image state, full URL for rendering
+    }
+    getImages();
+  }, [image] );
 
   const [newUserModal, setNewUserModal] = useState(false);
 
@@ -48,9 +73,9 @@ const Profile = ()=>{
 
           <div className="relative">
 
-            <img src={user.image} className="w-38 h-38 rounded-full border-3 border-gray-300"></img>
+            <img src={image} className="w-38 h-38 rounded-full border-3 border-gray-300"></img>
             <div className="bg-gray-400/70 w-13 h-13 p-2 text-2xl rounded-full absolute top-24 left-24 hover:cursor-pointer">
-              <FaCamera className="text-white-300 text-[2rem] m-auto" onClick={ ()=>setNewUserModal( !newUserModal ) }/>
+              <FaCamera className="text-white-300 text-[2rem] m-auto" onClick={ ()=>setUploadImageModal( !uploadImageModal ) }/>
             </div>
 
           </div>
