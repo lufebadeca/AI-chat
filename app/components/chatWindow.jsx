@@ -1,28 +1,91 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
+import { db } from "@/firebaseConfig";  //connect with configFirebase file
+import {collection, query, getDocs, where} from "firebase/firestore";
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
 export const ChatWindow = ( {activeUser, contactList} ) =>{
 
     const [inputValue, setInputValue ] = useState("");
     const [messages, setMessages] = useState([]); // Step 1: Track input value
 
-    const submitMessage = (sender) => {
+    const chat = ai.chats.create({
+        model: "gemini-2.0-flash",
+        history: [
+          {
+            role: "user",
+            parts: [{ text: "Hello" }],
+          },
+          {
+            role: "model",
+            parts: [{ text: "Great to meet you. What would you like to know?" }],
+          },
+        ],
+        config: {
+            systemInstruction: 
+            `You are a person or entity I am chatting with, named ${activeUser.name} ${activeUser.lastName} and ${activeUser.description}`,
+            maxOutputTokens: 150,
+            temperature: 1.5,
+        }
+      });
+
+    useEffect(()=>{
+        setMessages([]);
+        const getConversation = async ()=>{
+            const myQuery = query( collection(db, "conversations"), where("userId", "==", activeUser.id) );
+
+            const conversationSnap = await getDocs(myQuery);
+            const conversation = conversationSnap.docs.map( (doc=> doc.data() ) );
+            console.log(conversation);
+            if (conversation[0]?.messages){
+                setMessages(conversation[0].messages);
+                /*
+                const formattedMessages = conversation[0].messages.map(msg => ({
+                    ...msg,
+                    date: msg.date.toDate() // Convierte Firestore Timestamp a JavaScript Date
+                }));
+    
+                setMessages(formattedMessages);*/
+            }
+        };
+        getConversation();
+    }, [activeUser])
+
+    const submitMessage = async (senderId) => {
       if (!inputValue.trim()) return; // Prevent sending empty messages
   
-      const newMessage = { sender: sender, text: inputValue };
+      const newMessage = { senderId: senderId, text: inputValue, date: Date.now() };
       setMessages( (prev)=>[...prev, newMessage] );
+
+      await askGemini(inputValue); //NEW GEMINI FUNCTION 
       setInputValue(""); // Clear input after sending
-      console.log(messages);
     };
+
+    const askGemini = async (inputValue)=>{
+        const response = await chat.sendMessage({
+            message: inputValue,
+        });
+
+        console.log("response", response.text);
+
+        const newMessage = {
+            text: response.text,
+            senderId: "gemini",
+            date: Date.now()
+        }
+        setMessages( (prev)=>[...prev, newMessage] );
+    }
 
     return(
         <section className="flex flex-col flex-1 p-4 bg-white rounded-lg shadow-md">
 
             <div className="bg-blue-200 flex justify-between items-center border-b">
                 <h1 className="text-xl font-bold text-gray-800 p-3">
-                    {activeUser ? `Chat con ${activeUser.name} | ${activeUser.phone}` : "Elige un contacto" }
+                    {activeUser ? `Chat con ${activeUser.name} (${activeUser.phone})` : "Elige un contacto" }
                 </h1>
 
                 {/* <Link
@@ -42,12 +105,17 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
             
             <div className="flex flex-1 flex-col py-4 text-gray-700 space-y-2 overflow-y-auto">
                 { messages.length>=1 && messages?.map( (msg, index) => (
-                    <p 
-                    key={index} 
-                    className={`p-2 rounded-lg w-3/4 ${msg.sender === "me" ? "bg-blue-500 text-white self-end" : "bg-gray-200 text-gray-800 self-start"}`}
+                    <section key={index} className={`p-2 rounded-lg w-3/4 ${msg.senderId === "me" ? 
+                    "bg-blue-500 text-white self-end" : 
+                    "bg-gray-200 text-gray-800 self-start"}`}
                     >
-                    {msg.text}
-                    </p>
+                        <span className="text-[11px] align-left">
+                            {new Date(msg.date).toLocaleString()}
+                        </span>
+                        <p >
+                            {msg.text}
+                        </p>
+                    </section>
                 ))}
             </div>
             

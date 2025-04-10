@@ -38,20 +38,16 @@ const Profile = ()=>{
 
   useEffect( ()=>{  //get images, hooked to user (profile/active user data)
     const getImages = async ()=>{
-      console.log(image);
-      // Get a reference to the storage service, which is used to create references in your storage bucket
-      if (!image) {
-        console.error("No image provided for storage reference.");
-        return;
-      }
       // Create a storage reference from our storage service
       const storageRef = ref(storage, image);
       const imageURL = await getDownloadURL(storageRef);
       console.log("full URL", imageURL);
       setImage(imageURL); //image state, full URL for rendering
     }
-    getImages();
-  }, [image] );
+    if(user) {
+      getImages();
+    }
+  }, [user] );
 
   const [newUserModal, setNewUserModal] = useState(false);
 
@@ -64,6 +60,7 @@ const Profile = ()=>{
       <NewUserForm setModal={setNewUserModal} mode="edit" 
       initName={user.name} initLastName={user.lastName}
       initPhone={user.phone} initImgSrc={user.image} pickedUserId={params.id}
+      initDescription={user.description} initDob={user.dob}
       /> }
 
       <Header/>
@@ -85,12 +82,33 @@ const Profile = ()=>{
           </h2>
 
           <h3 className="text-black text-[1.4rem] font-bold">
-            Teléfono: {user.phone} <span><FaPen className={pencilStyle} onClick={ ()=>setNewUserModal( !newUserModal ) }/></span>
+            Teléfono: 
+            <span className="text-gray-600 text-[1.3rem] border-1 border-gray-400 bg-white">{user.phone} </span> 
+            <span><FaPen className={pencilStyle} onClick={ ()=>setNewUserModal( !newUserModal ) }/></span>
           </h3>
+
+          <h3 className="text-black text-[1.4rem] font-bold">
+            Fecha de nacimiento: 
+            <span className="text-gray-600 text-[1.3rem] border-1 border-gray-400 bg-white">{user.dob}</span> 
+            <span><FaPen className={pencilStyle} onClick={ ()=>setNewUserModal( !newUserModal ) }/></span>
+          </h3>
+
+          <article className="text-black text-[1.4rem] font-bold ">
+            Sobre mí: 
+            <span><FaPen className={pencilStyle} onClick={ ()=>setNewUserModal( !newUserModal ) }/></span>
+            <p className="text-gray-600 text-[1rem] border-1 border-gray-400 bg-white">
+              {user.description} 
+            </p>
+          </article>
           
         </section>
         ) :
-        <p>Cargando...</p>
+        (
+        <div className="flex justify-center items-center h-[75vh]">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+        )
+
       }
     </section>
   )
