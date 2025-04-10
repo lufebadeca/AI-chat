@@ -29,7 +29,7 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
             systemInstruction: 
             `You are a person or entity I am chatting with, named ${activeUser.name} ${activeUser.lastName} and ${activeUser.description}`,
             maxOutputTokens: 150,
-            temperature: 1.5,
+            temperature: 1.6,
         }
       });
 
@@ -135,12 +135,12 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
                     Send
                 </button>
 
-                <button 
+                {/* <button 
                     className="px-4 py-2 text-white bg-gray-400 rounded-lg shadow-md transition duration-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     onClick={()=>submitMessage("you")}
                 >
                     Reply
-                </button>
+                </button> */}
             </div>
             
         </section>

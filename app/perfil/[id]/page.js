@@ -83,20 +83,20 @@ const Profile = ()=>{
 
           <h3 className="text-black text-[1.4rem] font-bold">
             Teléfono: 
-            <span className="text-gray-600 text-[1.3rem] border-1 border-gray-400 bg-white">{user.phone} </span> 
+            <span className="text-gray-600 text-[1.3rem] border-1 border-gray-400 bg-white rounded-sm">{user.phone} </span> 
             <span><FaPen className={pencilStyle} onClick={ ()=>setNewUserModal( !newUserModal ) }/></span>
           </h3>
 
           <h3 className="text-black text-[1.4rem] font-bold">
             Fecha de nacimiento: 
-            <span className="text-gray-600 text-[1.3rem] border-1 border-gray-400 bg-white">{user.dob}</span> 
+            <span className="text-gray-600 text-[1.3rem] border-1 border-gray-400 bg-white rounded-sm">{user.dob}</span> 
             <span><FaPen className={pencilStyle} onClick={ ()=>setNewUserModal( !newUserModal ) }/></span>
           </h3>
 
           <article className="text-black text-[1.4rem] font-bold ">
             Sobre mí: 
             <span><FaPen className={pencilStyle} onClick={ ()=>setNewUserModal( !newUserModal ) }/></span>
-            <p className="text-gray-600 text-[1rem] border-1 border-gray-400 bg-white">
+            <p className="text-gray-600 text-[1rem] border-1 border-gray-400 bg-white rounded-sm">
               {user.description} 
             </p>
           </article>
