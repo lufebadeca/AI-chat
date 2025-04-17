@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 import { db } from "@/firebaseConfig";  //connect with configFirebase file
@@ -13,27 +13,98 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
     const [inputValue, setInputValue ] = useState("");
     const [messages, setMessages] = useState([]); // Step 1: Track input value
 
-    const chat = ai.chats.create({
-        model: "gemini-2.0-flash",
-        history: [
-          {
-            role: "user",
-            parts: [{ text: "Hello" }],
-          },
-          {
-            role: "model",
-            parts: [{ text: "Great to meet you. What would you like to know?" }],
-          },
-        ],
-        config: {
-            systemInstruction: 
-            `You are a person or entity I am chatting with, named ${activeUser.name} ${activeUser.lastName} and ${activeUser.description}`,
-            maxOutputTokens: 150,
-            temperature: 1.6,
-        }
-    });
+    //UseRef to create references to the geminiAI instance of class, for changes not bound to re-renders
+    const chatRef = useRef(null);
+    const historyRef = useRef([]);
 
+    const updateFirestoreHistory = async () => {
+        const MAX_HISTORY_LENGTH = 20;
+        const newChatHistory = chatRef.current?.history || [];
+      
+        // Combinar lo que había con lo nuevo
+        const combined = [...(historyRef.current || []), ...newChatHistory];
+      
+        // Opcional: quitar duplicados si Gemini repite los mensajes
+        const deduped = combined.filter(
+          (item, index, self) =>
+            index === self.findIndex((t) =>
+              JSON.stringify(t) === JSON.stringify(item)
+            )
+        );
+        // Limitar a los últimos 20
+        const limitedHistory = deduped.slice(-MAX_HISTORY_LENGTH);
+        // Guardar y actualizar referencia
+        historyRef.current = limitedHistory;
     
+        const docRef = doc(db, "chatHistories", activeUser.id);
+        await setDoc(docRef, { history: limitedHistory });
+      };
+    
+    /*const saveHistoryToFirestore = async (userId, history) => {
+        const MAX_HISTORY_LENGTH = 20;
+        const trimmedHistory = history.slice(-MAX_HISTORY_LENGTH); // evita mutar el original
+        const docRef = doc(db, "chatHistories", userId);
+        await setDoc(docRef, { history: trimmedHistory });
+    };*/
+
+    const loadHistoryFromFirestore = async (userId) => {
+        const docRef = doc(db, "chatHistories", userId);
+        const docSnap = await getDoc(docRef);
+        return docSnap.exists() ? docSnap.data().history : [];
+    };
+    
+
+    //create gemini conversation only once per active user, and set to useRef to allow changes without re-rendering
+    useEffect( ()=>{
+
+        let isMounted = true;
+
+        const setupChat = async () => {
+            const storedHistory = await loadHistoryFromFirestore(activeUser.id);
+            if (!isMounted) return;
+
+            chatRef.current = null; //clean the last history (other activeuser)
+            historyRef.current = [];
+
+            chatRef.current = ai.chats.create({
+                model: "gemini-2.0-flash",
+                history: [ ],   //needs to be updated after each message with push
+                config: {
+                    systemInstruction: 
+                    `You are a person or entity I am chatting with, named ${activeUser.name} ${activeUser.lastName} and ${activeUser.description}`,
+                    maxOutputTokens: 150,
+                    temperature: 1.6,
+                }
+            });
+            
+            if (chatRef.current) {
+                chatRef.current.history = storedHistory || [];
+                console.log( storedHistory );
+            };
+
+            setMessages(chatRef.current.history);  //local messages to be retrieved history  
+        }
+        setupChat();
+
+        const getConversation = async ()=>{
+            const myQuery = query( collection(db, "conversations"), where("userId", "==", activeUser.id) );
+
+            const conversationSnap = await getDocs(myQuery);
+            const conversation = conversationSnap.docs.map( (doc=> doc.data() ) );
+            //console.log(conversation);
+            if (conversation[0]?.messages){
+                setMessages(conversation[0].messages);
+            }
+        };
+        getConversation();
+
+        return () => {
+            isMounted = false;
+        };
+
+    }, [activeUser]);
+    
+
     const saveMessageToFirestore = async (userId, newMessage) => {
         const conversationRef = doc(db, "conversations", userId);
         const docSnap = await getDoc(conversationRef);
@@ -57,31 +128,6 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
         }
     };
 
-
-
-
-    useEffect(()=>{
-        setMessages([]);
-        const getConversation = async ()=>{
-            const myQuery = query( collection(db, "conversations"), where("userId", "==", activeUser.id) );
-
-            const conversationSnap = await getDocs(myQuery);
-            const conversation = conversationSnap.docs.map( (doc=> doc.data() ) );
-            console.log(conversation);
-            if (conversation[0]?.messages){
-                setMessages(conversation[0].messages);
-                /*
-                const formattedMessages = conversation[0].messages.map(msg => ({
-                    ...msg,
-                    date: msg.date.toDate() // Convierte Firestore Timestamp a JavaScript Date
-                }));
-    
-                setMessages(formattedMessages);*/
-            }
-        };
-        getConversation();
-    }, [activeUser])
-
     const submitMessage = async (senderId) => {
       if (!inputValue.trim()) return; // Prevent sending empty messages
   
@@ -94,22 +140,29 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
       setInputValue(""); // Clear input after sending
     };
 
-    const askGemini = async (inputValue, userId)=>{
-        const response = await chat.sendMessage({
-            message: inputValue,
+    const askGemini = async (newMessage, userId)=>{
+
+        //update the history with proper format: user message
+        //await historyRef.current.push({ role: "user", parts: [{ text: inputValue }] }); 
+
+        const response = await chatRef.current.sendMessage({
+            message: newMessage,
         });
 
-        //console.log("response", response.text);
-
-        const newMessage = {
+        const newGeminiMessage = {
             text: response.text,
             senderId: userId, //gemini will handle several users
             date: Date.now()
         }
-        console.log(newMessage);
-        setMessages( (prev)=>[...prev, newMessage] );
 
-        await saveMessageToFirestore(userId, newMessage); // 👈 Save Gemini reply
+        //update the history with proper format: gemini response
+        //await historyRef.current.push({ role: "model", parts: [ { text: response.text } ] }); /*not necessary*/
+
+        //console.log(newGeminiMessage);
+        setMessages( (prev)=>[...prev, newGeminiMessage] );
+
+        await saveMessageToFirestore(userId, newGeminiMessage); // 👈 Save Gemini reply
+        await updateFirestoreHistory();
     }
 
     return(
