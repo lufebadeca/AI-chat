@@ -21,7 +21,7 @@ export const ContactList = ({usersList, setUsersList, activeUser, setActiveUser}
             contact.name.toLowerCase().includes(filterValue.toLowerCase() ) || 
             contact.lastName.toLowerCase().includes(filterValue.toLowerCase() )
         );
-        console.log(results)
+        //console.log(results)
         setFilteredUsers(results);
     }
 

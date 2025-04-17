@@ -2,7 +2,7 @@ import React from "react";
 
 export const ContactCard = ({contact, activeUser, setActiveUser})=>{
 
-    activeUser && console.log(activeUser.name, contact.name);
+    // activeUser && console.log(activeUser.name, contact.name);
 
     return(
 

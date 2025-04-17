@@ -1,6 +1,6 @@
 "use client"
 import { Header } from "../../components/header"
-import { collection, doc, setDoc, getDoc } from "firebase/firestore"; 
+import { collection, doc, setDoc, getDoc, onSnapshot } from "firebase/firestore"; 
 import { ref, getStorage, getDownloadURL, uploadBytesResumable } from "firebase/storage"; 
 import { db, storage } from "@/firebaseConfig";  //connect with configFirebase file
 import { useParams } from "next/navigation";
@@ -21,27 +21,49 @@ const Profile = ()=>{
 
   console.log(params);
 
-  useEffect( ()=>{  //get user data, hooked to first render []
-    const  getUserData = async()=>{
-      const docRef = doc(db, "users", params.id);
-      const userSnap = await getDoc(docRef);
-      const userData = userSnap.data();
+      /*USE EFFECT PARA SUSCRIBIR A CAMBIOS EN BD
+      useEffect( ()=>{
+          const usersCollection = collection(db, 'users');
+          const unsubscribe = onSnapshot(usersCollection, (snapshot) => {
+          const usersData = snapshot.docs.map(doc => ({
+              id: doc.id, // **Crucially important:  Include the document ID**
+              ...doc.data()
+          }));
+          setUsersList(usersData);
+          setLoading(false);
+          }, (error) => {
+          console.error("Error fetching users:", error);
+          setLoading(false);
+          });
+  
+          // Clean up the listener when the component unmounts
+          return () => unsubscribe();
+      }, []); // Empty dependency array means this effect runs only once, on mount */
 
-      //console.log(JSON.stringify(userData));
-      console.log((userData));
-      setImage(userData.image);
-      setUser(userData);
-    }
-    getUserData();
-  }, []
-  );
+  useEffect(() => {
+    const docRef = doc(db, "users", params.id);
+  
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        console.log("Datos actualizados:", userData);
+        setImage(userData.image);
+        setUser(userData);
+      } else {
+        console.log("No se encontró el documento");
+      }
+    });
+  
+    // Limpiar suscripción al desmontar
+    return () => unsubscribe();
+  }, [params.id]); //hook to params.id instead of [], will work also on first render
 
   useEffect( ()=>{  //get images, hooked to user (profile/active user data)
     const getImages = async ()=>{
       // Create a storage reference from our storage service
       const storageRef = ref(storage, image);
       const imageURL = await getDownloadURL(storageRef);
-      console.log("full URL", imageURL);
+      //console.log("StorageRef", storageRef,"full URL", imageURL);
       setImage(imageURL); //image state, full URL for rendering
     }
     if(user) {

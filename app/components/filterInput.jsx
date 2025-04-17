@@ -12,11 +12,11 @@ const FilterInput = ({filterUsers})=>{
 
 
   return(
-    <>
-      <input className="bg-white border-2 border-black text-blue-400 rounded-md mb-3" type="text" onChange={handleFilter} 
+    <div className="w-full">
+      <input className="bg-white text-blue-400 w-full border-black border-2 rounded-md mb-3" type="text" onChange={handleFilter} 
         placeholder="Buscar contacto..." value={filterValue}>
       </input>
-    </>
+    </div>
   )
 }
 

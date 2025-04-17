@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 import { db } from "@/firebaseConfig";  //connect with configFirebase file
-import {collection, query, getDocs, where} from "firebase/firestore";
+import {collection, query, doc, getDoc, getDocs, setDoc, updateDoc, where} from "firebase/firestore";
 import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
@@ -31,7 +31,34 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
             maxOutputTokens: 150,
             temperature: 1.6,
         }
-      });
+    });
+
+    
+    const saveMessageToFirestore = async (userId, newMessage) => {
+        const conversationRef = doc(db, "conversations", userId);
+        const docSnap = await getDoc(conversationRef);
+
+        if (docSnap.exists()) {
+            // Update existing conversation
+            const existingData = docSnap.data();
+            await updateDoc(conversationRef, {
+                messages: [...existingData.messages, newMessage],
+                lastMessage: newMessage.text,
+                read: false, // You can adapt this depending on sender
+            });
+        } else {
+            // Create a new conversation
+            await setDoc(conversationRef, {
+                userId: userId,
+                messages: [newMessage],
+                lastMessage: newMessage.text,
+                read: false,
+            });
+        }
+    };
+
+
+
 
     useEffect(()=>{
         setMessages([]);
@@ -58,26 +85,31 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
     const submitMessage = async (senderId) => {
       if (!inputValue.trim()) return; // Prevent sending empty messages
   
+      //manually submitted message with senderId "me"
       const newMessage = { senderId: senderId, text: inputValue, date: Date.now() };
       setMessages( (prev)=>[...prev, newMessage] );
 
-      await askGemini(inputValue); //NEW GEMINI FUNCTION 
+      await saveMessageToFirestore(activeUser.id, newMessage); // 👈 Save it in firestore
+      await askGemini(inputValue, activeUser.id); //NEW GEMINI FUNCTION 
       setInputValue(""); // Clear input after sending
     };
 
-    const askGemini = async (inputValue)=>{
+    const askGemini = async (inputValue, userId)=>{
         const response = await chat.sendMessage({
             message: inputValue,
         });
 
-        console.log("response", response.text);
+        //console.log("response", response.text);
 
         const newMessage = {
             text: response.text,
-            senderId: "gemini",
+            senderId: userId, //gemini will handle several users
             date: Date.now()
         }
+        console.log(newMessage);
         setMessages( (prev)=>[...prev, newMessage] );
+
+        await saveMessageToFirestore(userId, newMessage); // 👈 Save Gemini reply
     }
 
     return(
