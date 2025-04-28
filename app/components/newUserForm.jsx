@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { db, storage } from "@/firebaseConfig";  //connect with configFirebase file
 import { collection, doc, getDoc, setDoc } from "firebase/firestore"; 
-import { ref, uploadBytes, getStorage, getDownloadURL } from "firebase/storage"; 
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; 
 
 export const NewUserForm = ( 
     {setModal, mode="", initName="", initLastName="", initPhone="", initDob="",initDescription="", initImgSrc="", pickedUserId=""} 
@@ -12,10 +12,9 @@ export const NewUserForm = (
   const [phone, setPhone] = useState(initPhone);
   const [dob, setDob] = useState(initDob);
   const [description, setDescription] = useState(initDescription);
-  const [image, setImage] = useState("");
-  const [imageFile, setImageFile] = useState(); //state for image file to load
 
   const [previewImage, setPreviewImage] = useState(null);
+  const fileInputRef = useRef(null);
 
   const handleModal = (e)=>{
     if ( e.target.id==="modal" ){
@@ -23,9 +22,12 @@ export const NewUserForm = (
     }
   }
 
+  const handleImageClick = () => {
+    fileInputRef.current.click();
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    setImageFile(file);
 
     if (file) {
         const imageUrl = URL.createObjectURL(file);
@@ -52,20 +54,20 @@ export const NewUserForm = (
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const fullImageURL = await uploadImage(imageFile);  //first upload file (state) loaded in input, retrieve firebase URL
-    //WATCH OUT: image state not updated immediately, would save empty string
-    //console.log(firebaseImageURL);
-    //const fullImageURL = await getFullImageURL(firebaseImageURL);
-    console.log(fullImageURL);
-    // Call the onAddUser prop with the new user object
-    mode==="edit" ? handleEditUser(): handleAddUser(fullImageURL);  
+    const file = fileInputRef.current.files[0];
+    if (file) {
+      const fullImageURL = await uploadImage(file);
+      mode === "edit" ? handleEditUser(fullImageURL) : handleAddUser(fullImageURL);
+    } else {
+      mode === "edit" ? handleEditUser(initImgSrc) : handleAddUser(initImgSrc);
+    }
 
     setName('');
     setLastName('');
     setPhone('');
     setDob('');
     setDescription('');
-    setImage('');
+    setPreviewImage(null);
 
     setModal(false);
   };
@@ -73,7 +75,6 @@ export const NewUserForm = (
   const handleAddUser = async (userImageURL)=>{
     const newUser = await doc( collection(db, "users"));
 
-    console.log("image to save", image)
     await setDoc(newUser, {
       id: newUser.id,
       name: name,
@@ -86,7 +87,7 @@ export const NewUserForm = (
     setModal(false);
   }
 
-  const handleEditUser = async ()=>{
+  const handleEditUser = async (userImageURL)=>{
     const docRef = doc(db, "users", pickedUserId);
     const userSnap = await getDoc(docRef);
     const userData = userSnap.data();
@@ -98,7 +99,7 @@ export const NewUserForm = (
       phone: phone || userData.phone,
       description: description || userData.description,
       dob: dob || userData.dob,
-      image: image || userData.image
+      image: userImageURL || userData.image
     } );
     setModal(false);
   }
@@ -145,17 +146,28 @@ export const NewUserForm = (
                 />
             </div>
 
-                <label htmlFor="image">Sube tu imagen:</label>
-            <div className="flex justify-between items-center border-1 bg-gray" id="image">
-                <input type="file" id="image" className="border-gray-400 border-1 mx-3 text-xs cursor-pointer"
+            <label htmlFor="image" className="block mb-2">Sube tu imagen:</label>
+            <div 
+              className="flex items-center justify-between p-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors"
+              id="image" onClick={handleImageClick}
+            >
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
                   accept="image/*"
-                  onChange={ handleImageChange }
+                  onChange={handleImageChange}
                 />
-                <img
-                  src={previewImage || "https://static.vecteezy.com/system/resources/previews/026/631/445/non_2x/add-photo-icon-symbol-design-illustration-vector.jpg"}
-                  alt="Vista previa"
-                  className="w-10 h-10 object-cover rounded-md border"
-                />
+                <span className="text-sm text-gray-600">
+                  {fileInputRef.current?.files[0]?.name || "Haz clic para seleccionar una imagen"}
+                </span>
+              </div>
+              <img
+                src={previewImage || "https://static.vecteezy.com/system/resources/previews/026/631/445/non_2x/add-photo-icon-symbol-design-illustration-vector.jpg"}
+                alt="Vista previa"
+                className="w-16 h-16 object-cover rounded-lg border"
+              />
             </div>
 
             <div className="flex justify-between flex-col">
