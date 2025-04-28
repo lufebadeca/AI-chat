@@ -33,29 +33,20 @@ export const NewUserForm = (
     }
   };
 
-
   const uploadImage = async (file)=>{
     // Upload file and metadata to the object 'images/mountains.jpg'
     console.log(file);
     if (!file) return;
-    const storageRef = ref( storage, `user-images/${file.name}` );
-    console.log(storageRef);
-    const response = await uploadBytes(storageRef, file, {contentType: file.type } );
-    console.log(response);
+    const storageRef = ref( storage, `user-images/${file.name}` ); //create a fire-storage ref to upload to
+    //console.log(storageRef);
+    const response = await uploadBytes(storageRef, file, {contentType: file.type } ); //upload the file
+    //console.log(response);    //and get the response object, which has the firestorage path in metadata
 
-    const storageRefFull = ref(storage, response.metadata.fullPath); //fullPath is fbase URL path
-    const imageURL = await getDownloadURL(storageRefFull);
+    const savedPicRef = ref(storage, response.metadata.fullPath); //fullPath is fbase URL path, creates a ref
+    const imageURL = await getDownloadURL(savedPicRef);  //get full|absolute URL of loaded file
+    console.log(storageRef===savedPicRef);
 
     return imageURL;  //returns image state, full URL for rendering
-  }
-
-  //get full URL for user.image
-  const getFullImageURL = async (userImageURL)=>{
-    // Create a storage reference from our storage service
-    const storageRef = ref(storage, userImageURL);
-    const imageURL = await getDownloadURL(storageRef);
-    //console.log("full URL", imageURL);
-    return imageURL; //image state, full URL for rendering
   }
 
   const handleSubmit = async (e) => {

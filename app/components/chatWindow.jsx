@@ -1,6 +1,8 @@
 import React from "react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import EmojiPicker from 'emoji-picker-react';
+import { BsEmojiSmile } from 'react-icons/bs';
 
 import { db } from "@/firebaseConfig";  //connect with configFirebase file
 import {collection, query, doc, getDoc, getDocs, setDoc, updateDoc, where} from "firebase/firestore";
@@ -12,10 +14,12 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
 
     const [inputValue, setInputValue ] = useState("");
     const [messages, setMessages] = useState([]); // Step 1: Track input value
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     //UseRef to create references to the geminiAI instance of class, for changes not bound to re-renders
     const chatRef = useRef(null);
     const historyRef = useRef([]);
+    const messagesEndRef = useRef(null); // Referencia para el auto-scroll
 
     const updateFirestoreHistory = async () => {
         const MAX_HISTORY_LENGTH = 20;
@@ -73,7 +77,7 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
                     systemInstruction: 
                     `You are a person or entity I am chatting with, named ${activeUser.name} ${activeUser.lastName} and ${activeUser.description}`,
                     maxOutputTokens: 150,
-                    temperature: 1.6,
+                    temperature: 1.5,
                 }
             });
             
@@ -103,6 +107,10 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
         };
 
     }, [activeUser]);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
     
 
     const saveMessageToFirestore = async (userId, newMessage) => {
@@ -165,12 +173,22 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
         await updateFirestoreHistory();
     }
 
+    // Formatear el teléfono en el formato XXX-XXX-XXXX
+    const formatPhone = (phone) => {
+        const cleaned = phone.replace(/\D/g, '');
+        const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+        if (match) {
+            return `(${match[1]}-${match[2]}-${match[3]})`;
+        }
+        return phone;
+    };
+
     return(
         <section className="flex flex-col flex-1 p-4 bg-white rounded-lg shadow-md">
 
             <div className="bg-blue-200 flex justify-between items-center border-b">
                 <h1 className="text-xl font-bold text-gray-800 p-3">
-                    {activeUser ? `Chat con ${activeUser.name} (${activeUser.phone})` : "Elige un contacto" }
+                    {activeUser ? `Chat con ${activeUser.name} ${formatPhone(activeUser.phone)}` : "Elige un contacto" }
                 </h1>
 
                 {/* <Link
@@ -202,9 +220,32 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
                         </p>
                     </section>
                 ))}
+                <div ref={messagesEndRef} /> {/* Elemento de referencia para el scroll */}
             </div>
             
             <div className="flex items-center gap-2 border-t pt-2">
+                {/* Emoji Picker */}
+                <div className="relative">
+                    <button
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        className="p-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    >
+                        <BsEmojiSmile size={20} />
+                    </button>
+                    {showEmojiPicker && (
+                        <div className="absolute bottom-12 left-0">
+                            <EmojiPicker
+                                onEmojiClick={(emojiObject) => {
+                                    setInputValue((prevInput) => prevInput + emojiObject.emoji);
+                                    setShowEmojiPicker(false);
+                                }}
+                                width={300}
+                                height={400}
+                            />
+                        </div>
+                    )}
+                </div>
+                {/* Input for chat*/}
                 <input 
                     id="input"
                     type="text"
@@ -212,6 +253,11 @@ export const ChatWindow = ( {activeUser, contactList} ) =>{
                     placeholder={`Escribe acá`}
                     value={inputValue}
                     onChange={ (e) => setInputValue(e.target.value) }
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && inputValue.trim()) {
+                            submitMessage("me");
+                        }
+                    }}
                     />
                 <button 
                     className="px-4 py-2 text-white bg-blue-600 rounded-lg shadow-md transition duration-300 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
