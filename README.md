@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Message Chat: Chat Interactivo con IA Personalizada 🤖💬
 
-## Getting Started
+Aplicación web interactiva desarrollada con Next.js y React que permite a los usuarios crear perfiles de personajes (con nombre, foto, descripción, etc.) y entablar conversaciones con ellos. Cada personaje cobra vida gracias a la inteligencia artificial de Google Gemini, que adapta sus respuestas basándose en el perfil y el historial de la conversación.
 
-First, run the development server:
+La aplicación utiliza Firebase para la gestión de la base de datos (Firestore) y el almacenamiento de archivos (Firebase Storage), asegurando la persistencia de los datos de usuario y las conversaciones.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ Características Principales
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* **Creación de Usuarios:** Define personajes únicos con:
+    * Nombre y Apellido
+    * Foto de Perfil (subida y almacenada en Firebase Storage)
+    * Edad
+    * Teléfono
+    * Fecha de Nacimiento
+    * Descripción (clave para la personalidad de la IA)
+* **Chat Interactivo:** Conversa individualmente con cada usuario creado.
+* **IA Personalizada (Gemini):** Las respuestas son generadas por el modelo `gemini-2.0-flash` de Google, parametrizado con el nombre y la descripción del perfil para simular una conversación con ese personaje específico.
+* **Memoria Conversacional:** Mantiene el contexto de la conversación guardando y reutilizando los últimos 20 mensajes del historial, lo que permite diálogos más coherentes y fluidos.
+* **Persistencia de Datos:** Toda la información de los usuarios y las conversaciones se almacena de forma segura en Firebase (Firestore y Storage).
+* **Interfaz Moderna:** Construida con Next.js, React y estilizada con Tailwind CSS. Incluye selector de emojis y íconos.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 🚀 Tecnologías Utilizadas
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* **Framework:** Next.js 15+
+* **Librería Frontend:** React 19+
+* **Inteligencia Artificial:** Google Gemini API (`@google/genai`, modelo `gemini-2.0-flash`)
+* **Base de Datos:** Firebase Firestore
+* **Almacenamiento:** Firebase Storage
+* **Estilos:** Tailwind CSS 4+, styled-component (*Nota: verificar si es `styled-components`*), react-icons
+* **UI/UX:** emoji-picker-react, react-hot-toast (para notificaciones)
+* **Lenguaje:** JavaScript/TypeScript (implícito con Next.js)
 
-## Learn More
+## 🛠️ Instalación y Configuración Local
 
-To learn more about Next.js, take a look at the following resources:
+Sigue estos pasos para ejecutar el proyecto en tu máquina local:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone https://github.com/lufebadeca/AI-chat
+    cd message-chat
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2.  **Instalar dependencias:**
+    Se recomienda usar `npm` o `yarn`.
+    ```bash
+    npm install
+    # o
+    yarn install
+    ```
 
-## Deploy on Vercel
+3.  **Configurar Variables de Entorno:**
+    Crea un archivo `.env.local` en la raíz del proyecto. Necesitarás obtener tus credenciales de configuración de Firebase y tu API Key de Google AI Studio para Gemini. Añade las siguientes variables (reemplaza los valores de ejemplo):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    ```env
+    # Firebase Configuration
+    NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXX
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu-proyecto
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tu-proyecto.appspot.com
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=1234567890
+    NEXT_PUBLIC_FIREBASE_APP_ID=1:1234567890:web:XXXXXXXXXXXXXXXXXXXXXX
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    # Google Gemini API Key
+    GEMINI_API_KEY=AIzaSyYYYYYYYYYYYYYYYYYYYYYY
+    ```
+    *Asegúrate de tener un proyecto Firebase creado y configurado con Firestore y Storage habilitados.*
