@@ -51,14 +51,19 @@ export const NewUserForm = (
     return imageURL;  //returns image state, full URL for rendering
   }
 
+  //lógica para guardar un usuario
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    //store picture in a variable using refHook
     const file = fileInputRef.current.files[0];
+    
     if (file) {
+      //if there is file, upload in storage
       const fullImageURL = await uploadImage(file);
       mode === "edit" ? handleEditUser(fullImageURL) : handleAddUser(fullImageURL);
-    } else {
+    } //also handle add / edit user in firebase DB 
+    else {
       mode === "edit" ? handleEditUser(initImgSrc) : handleAddUser(initImgSrc);
     }
 
@@ -72,8 +77,9 @@ export const NewUserForm = (
     setModal(false);
   };
 
+  //add an user to db, passing the pic URL as parameter
   const handleAddUser = async (userImageURL)=>{
-    const newUser = await doc( collection(db, "users"));
+    const newUser = doc( collection(db, "users"));
 
     await setDoc(newUser, {
       id: newUser.id,
@@ -88,7 +94,7 @@ export const NewUserForm = (
   }
 
   const handleEditUser = async (userImageURL)=>{
-    const docRef = doc(db, "users", pickedUserId);
+    const docRef = doc(db, "users", pickedUserId); //extant user to be edited
     const userSnap = await getDoc(docRef);
     const userData = userSnap.data();
 

@@ -15,6 +15,7 @@ export const ContactList = ({usersList, setUsersList, activeUser, setActiveUser}
 
     const [filteredUsers, setFilteredUsers] = useState([]);
 
+    //filtered users changes according to searchBox value
     const filterUsers = (filterValue)=>{
         let newList = [...usersList];
         const results = newList.filter( (contact)=>
@@ -30,12 +31,12 @@ export const ContactList = ({usersList, setUsersList, activeUser, setActiveUser}
         filterUsers(""); // o usar el valor actual de búsqueda si lo tenés en un estado
       }, [usersList]);
 
-    // Set up a real-time listener
+    // Load users data. Set up a real-time listener
     useEffect( ()=>{
-        const usersCollection = collection(db, 'users');
+        const usersCollection = collection(db, 'users');    //set the collection name
         const unsubscribe = onSnapshot(usersCollection, (snapshot) => {
-        const usersData = snapshot.docs.map(doc => ({
-            id: doc.id, // **Crucially important:  Include the document ID**
+        const usersData = snapshot.docs.map(doc => ({       //
+            id: doc.id, // **Crucially important:  Include the document ID to usersData**
             ...doc.data()
         }));
         setUsersList(usersData);
